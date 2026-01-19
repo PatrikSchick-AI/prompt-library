@@ -1,29 +1,6 @@
 import { z } from 'zod';
 
 // Status enum
-export const PromptStatusSchema = z.enum([
-  'draft',
-  'in_review',
-  'testing',
-  'active',
-  'deprecated',
-  'archived',
-]);
-
-export const EventTypeSchema = z.enum([
-  'created',
-  'version_created',
-  'status_changed',
-  'metadata_updated',
-  'rollback',
-]);
-
-// Semver validation
-export const semverRegex = /^\d+\.\d+\.\d+$/;
-
-export const semverSchema = z.string().regex(/^\d+\.\d+\.\d+$/, 'Must be valid semver (X.Y.Z)');
-
-// Core schemas
 export const promptStatusSchema = z.enum([
   'draft',
   'in_review',
@@ -33,6 +10,19 @@ export const promptStatusSchema = z.enum([
   'archived'
 ]);
 
+export const eventTypeSchema = z.enum([
+  'created',
+  'version_created',
+  'status_changed',
+  'metadata_updated',
+  'rollback',
+]);
+
+// Semver validation
+export const semverRegex = /^\d+\.\d+\.\d+$/;
+export const semverSchema = z.string().regex(semverRegex, 'Must be valid semver (X.Y.Z)');
+
+// Prompt schemas
 export const createPromptSchema = z.object({
   name: z.string().min(1).max(255),
   description: z.string().optional(),
@@ -42,7 +32,7 @@ export const createPromptSchema = z.object({
   content: z.string().min(1),
   system_prompt: z.string().optional(),
   models: z.array(z.string()).default([]),
-  model_config: z.record(z.unknown()).optional().default({}),
+  model_config: z.record(z.string(), z.unknown()).optional().default({}),
   author: z.string().optional(),
 });
 
@@ -60,7 +50,7 @@ export const CreateVersionSchema = z.object({
   change_description: z.string().min(1, 'Change description is required'),
   bump_type: z.enum(['major', 'minor', 'patch']),
   models: z.array(z.string()).optional(),
-  model_config: z.record(z.unknown()).optional(),
+  model_config: z.record(z.string(), z.unknown()).optional(),
   author: z.string().optional(),
 });
 
@@ -85,7 +75,7 @@ export const SearchPromptsSchema = z.object({
   offset: z.number().int().min(0).default(0),
 });
 
-export type SearchPromptsQuery = z.infer<typeof searchPromptsSchema>;
+export type SearchPromptsQuery = z.infer<typeof SearchPromptsSchema>;
 
 // Version schemas
 export const createVersionSchema = z.object({
@@ -94,7 +84,7 @@ export const createVersionSchema = z.object({
   content: z.string().min(1, 'Content is required'),
   system_prompt: z.string().optional(),
   models: z.array(z.string()).default([]),
-  model_config: z.record(z.unknown()).default({}),
+  model_config: z.record(z.string(), z.unknown()).default({}),
   author: z.string().optional(),
 });
 

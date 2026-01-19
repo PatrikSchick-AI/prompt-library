@@ -18,8 +18,8 @@ const VersionComparison = () => {
         setLoading(true);
         setError(null);
         const [ver1, ver2] = await Promise.all([
-          versionsApi.get(id, v1),
-          versionsApi.get(id, v2),
+          versionsApi.get(id, v1) as Promise<PromptVersion>,
+          versionsApi.get(id, v2) as Promise<PromptVersion>,
         ]);
         setVersion1(ver1);
         setVersion2(ver2);

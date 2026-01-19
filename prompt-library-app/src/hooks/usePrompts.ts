@@ -30,7 +30,7 @@ export function usePrompts(options: UsePromptsOptions = {}): UsePromptsResult {
     try {
       setLoading(true);
       setError(null);
-      const response = await promptsApi.list(options);
+      const response = await promptsApi.list(options) as { data: PromptListItem[] };
       setPrompts(response.data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch prompts');

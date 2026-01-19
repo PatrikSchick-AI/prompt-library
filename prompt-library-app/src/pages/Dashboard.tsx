@@ -5,13 +5,10 @@ import type { PromptStatus } from '../types/prompt';
 
 const Dashboard = () => {
   const [search, setSearch] = useState('');
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [selectedStatus, setSelectedStatus] = useState<PromptStatus[]>([]);
-  const [showCreateModal, setShowCreateModal] = useState(false);
 
   const { prompts, loading, error } = usePrompts({
     search: search || undefined,
-    tags: selectedTags.length > 0 ? selectedTags : undefined,
     status: selectedStatus.length > 0 ? selectedStatus : undefined,
   });
 
@@ -41,7 +38,10 @@ const Dashboard = () => {
       <div className="flex justify-between items-center mb-8">
         <h2 className="text-3xl font-bold text-slate-900">Prompt Library</h2>
         <button
-          onClick={() => setShowCreateModal(true)}
+          onClick={() => {
+            // TODO: Implement create modal
+            alert('Create prompt modal coming soon');
+          }}
           className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
         >
           Create Prompt

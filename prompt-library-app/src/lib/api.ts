@@ -12,9 +12,8 @@ async function apiRequest<T>(
 ): Promise<T> {
   const { requiresAuth, ...fetchOptions } = options;
 
-  const headers: HeadersInit = {
+  const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    ...fetchOptions.headers,
   };
 
   // Add admin key for write operations if required
@@ -23,6 +22,11 @@ async function apiRequest<T>(
     if (adminKey) {
       headers['X-Admin-Key'] = adminKey;
     }
+  }
+
+  // Merge with any additional headers
+  if (fetchOptions.headers) {
+    Object.assign(headers, fetchOptions.headers);
   }
 
   const response = await fetch(`${API_BASE}${endpoint}`, {

@@ -23,7 +23,7 @@ export function usePrompt(id: string | undefined): UsePromptResult {
     try {
       setLoading(true);
       setError(null);
-      const data = await promptsApi.get(id);
+      const data = await promptsApi.get(id) as PromptWithVersion;
       setPrompt(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch prompt');

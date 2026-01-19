@@ -1,12 +1,11 @@
 import { useState } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { usePrompt } from '../hooks/usePrompt';
 import type { PromptStatus } from '../types/prompt';
 
 const PromptDetail = () => {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
-  const { prompt, loading, error, refresh } = usePrompt(id);
+  const { prompt, loading, error } = usePrompt(id);
   const [activeTab, setActiveTab] = useState<'content' | 'versions' | 'activity'>('content');
 
   if (loading) {
