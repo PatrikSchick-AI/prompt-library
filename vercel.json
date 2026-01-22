@@ -1,5 +1,5 @@
 {
-  "buildCommand": "cd prompt-library-app && npm run build && cd .. && cp -r prompt-library-app/api api",
+  "buildCommand": "cd prompt-library-app && npm run build",
   "outputDirectory": "prompt-library-app/dist",
   "installCommand": "cd prompt-library-app && npm install",
   "framework": "vite",
