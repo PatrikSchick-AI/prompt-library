@@ -1,18 +1,9 @@
 {
-  "buildCommand": "cd prompt-library-app && npm run build",
+  "buildCommand": "cd prompt-library-app && npm run build && cd .. && cp -r prompt-library-app/api api",
   "outputDirectory": "prompt-library-app/dist",
   "installCommand": "cd prompt-library-app && npm install",
   "framework": "vite",
-  "functions": {
-    "prompt-library-app/api/**/*.ts": {
-      "runtime": "nodejs20.x"
-    }
-  },
   "rewrites": [
-    {
-      "source": "/api/:path*",
-      "destination": "/prompt-library-app/api/:path*"
-    },
     {
       "source": "/((?!api).*)",
       "destination": "/index.html"
