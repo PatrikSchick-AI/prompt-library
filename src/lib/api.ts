@@ -35,8 +35,25 @@ async function apiRequest<T>(
   });
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: 'Unknown error' }));
-    throw new Error(error.error || `HTTP ${response.status}`);
+    // Try to parse JSON error, fall back to text if that fails
+    let errorMessage = `HTTP ${response.status}`;
+    
+    try {
+      const error = await response.json();
+      errorMessage = error.error || error.message || errorMessage;
+    } catch {
+      // If JSON parsing fails, try to get text
+      try {
+        const text = await response.text();
+        if (text && text.length < 500) {
+          errorMessage = text;
+        }
+      } catch {
+        // Keep default HTTP status message
+      }
+    }
+    
+    throw new Error(errorMessage);
   }
 
   return response.json();
