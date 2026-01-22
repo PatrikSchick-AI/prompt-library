@@ -87,7 +87,7 @@ export const promptsApi = {
     apiRequest(`/prompts`, {
       method: 'POST',
       body: JSON.stringify(data),
-      requiresAuth: true,
+      requiresAuth: false, // PUBLIC endpoint - no admin key required
     }),
 
   update: (

@@ -6,12 +6,19 @@ interface LayoutProps {
 
 const Layout = ({ children }: LayoutProps) => {
   return (
-    <div className="min-h-screen bg-slate-50">
-      <header className="bg-white border-b border-slate-200">
+    <div className="min-h-screen" style={{ backgroundColor: 'var(--pl-bg)' }}>
+      <header style={{ 
+        backgroundColor: 'var(--pl-surface)', 
+        borderBottom: '1px solid var(--pl-border)' 
+      }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <Link to="/" className="flex items-center gap-2">
-              <h1 className="text-2xl font-bold text-slate-900">Prompt Library</h1>
+            <Link 
+              to="/" 
+              className="flex items-center gap-2 transition-colors hover:opacity-80"
+              style={{ color: 'var(--pl-text)' }}
+            >
+              <h1 className="text-2xl font-bold">Prompt Library</h1>
             </Link>
           </div>
         </div>

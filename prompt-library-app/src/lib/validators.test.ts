@@ -58,6 +58,84 @@ describe('validators', () => {
         })
       ).toThrow();
     });
+
+    it('should enforce max length on name', () => {
+      expect(() =>
+        createPromptSchema.parse({
+          name: 'a'.repeat(256),
+          purpose: 'Test',
+          content: 'Test',
+        })
+      ).toThrow();
+    });
+
+    it('should enforce max length on description', () => {
+      expect(() =>
+        createPromptSchema.parse({
+          name: 'Test',
+          description: 'a'.repeat(2001),
+          purpose: 'Test',
+          content: 'Test',
+        })
+      ).toThrow();
+    });
+
+    it('should enforce max length on purpose', () => {
+      expect(() =>
+        createPromptSchema.parse({
+          name: 'Test',
+          purpose: 'a'.repeat(501),
+          content: 'Test',
+        })
+      ).toThrow();
+    });
+
+    it('should enforce max length on content', () => {
+      expect(() =>
+        createPromptSchema.parse({
+          name: 'Test',
+          purpose: 'Test',
+          content: 'a'.repeat(50001),
+        })
+      ).toThrow();
+    });
+
+    it('should enforce max array length on tags', () => {
+      expect(() =>
+        createPromptSchema.parse({
+          name: 'Test',
+          purpose: 'Test',
+          content: 'Test',
+          tags: Array(21).fill('tag'),
+        })
+      ).toThrow();
+    });
+
+    it('should enforce max string length on individual tags', () => {
+      expect(() =>
+        createPromptSchema.parse({
+          name: 'Test',
+          purpose: 'Test',
+          content: 'Test',
+          tags: ['a'.repeat(101)],
+        })
+      ).toThrow();
+    });
+
+    it('should accept valid data within limits', () => {
+      const validData = {
+        name: 'a'.repeat(255),
+        description: 'a'.repeat(2000),
+        purpose: 'a'.repeat(500),
+        content: 'a'.repeat(50000),
+        system_prompt: 'a'.repeat(10000),
+        tags: Array(20).fill('tag'),
+        models: Array(20).fill('model'),
+        author: 'a'.repeat(255),
+        owner: 'a'.repeat(255),
+      };
+      expect(createPromptSchema.parse(validData)).toBeDefined();
+    });
   });
 
   describe('createVersionSchema', () => {

@@ -20,11 +20,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return await handleGetPrompts(req, res);
     }
 
-    // POST /api/prompts - Create prompt
+    // POST /api/prompts - Create prompt (PUBLIC - no admin key required)
     if (req.method === 'POST') {
-      if (!requireAdminKey(req)) {
-        return errorResponse(res, 'Unauthorized', 401);
-      }
       return await handleCreatePrompt(req, res);
     }
 

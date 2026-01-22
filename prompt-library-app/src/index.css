@@ -1,1 +1,50 @@
 @import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+@layer theme {
+  :root {
+    /* Dark theme colors - not pure black */
+    --pl-bg: #0a0a0f;
+    --pl-surface: #13131a;
+    --pl-surface-hover: #1a1a24;
+    --pl-border: #2a2a35;
+    --pl-border-hover: #3a3a48;
+    --pl-text: #e8e8f0;
+    --pl-text-muted: #9898a8;
+    --pl-accent: #6366f1;
+    --pl-accent-hover: #4f46e5;
+    --pl-accent-muted: #4338ca;
+    
+    /* Status colors for dark theme */
+    --pl-status-draft: #52525b;
+    --pl-status-review: #ca8a04;
+    --pl-status-testing: #2563eb;
+    --pl-status-active: #16a34a;
+    --pl-status-deprecated: #ea580c;
+    --pl-status-archived: #71717a;
+  }
+}
+
+@layer base {
+  * {
+    color-scheme: dark;
+  }
+  
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background-color: var(--pl-bg);
+    color: var(--pl-text);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  code, pre {
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+  }
+  
+  /* Focus styles */
+  *:focus-visible {
+    outline: 2px solid var(--pl-accent);
+    outline-offset: 2px;
+  }
+}

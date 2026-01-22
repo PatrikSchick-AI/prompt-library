@@ -22,18 +22,18 @@ export const eventTypeSchema = z.enum([
 export const semverRegex = /^\d+\.\d+\.\d+$/;
 export const semverSchema = z.string().regex(semverRegex, 'Must be valid semver (X.Y.Z)');
 
-// Prompt schemas
+// Prompt schemas with max-length limits for public API
 export const createPromptSchema = z.object({
   name: z.string().min(1).max(255),
-  description: z.string().optional(),
-  purpose: z.string().min(1),
-  tags: z.array(z.string()).default([]),
-  owner: z.string().optional(),
-  content: z.string().min(1),
-  system_prompt: z.string().optional(),
-  models: z.array(z.string()).default([]),
+  description: z.string().max(2000).optional(),
+  purpose: z.string().min(1).max(500),
+  tags: z.array(z.string().max(100)).max(20).default([]),
+  owner: z.string().max(255).optional(),
+  content: z.string().min(1).max(50000),
+  system_prompt: z.string().max(10000).optional(),
+  models: z.array(z.string().max(100)).max(20).default([]),
   model_config: z.record(z.string(), z.unknown()).optional().default({}),
-  author: z.string().optional(),
+  author: z.string().max(255).optional(),
 });
 
 export const UpdatePromptMetadataSchema = z.object({
