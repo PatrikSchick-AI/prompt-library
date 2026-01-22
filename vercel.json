@@ -3,10 +3,15 @@
   "outputDirectory": "prompt-library-app/dist",
   "installCommand": "cd prompt-library-app && npm install",
   "framework": "vite",
+  "functions": {
+    "prompt-library-app/api/**/*.ts": {
+      "runtime": "nodejs20.x"
+    }
+  },
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "/api/:path*"
+      "destination": "/prompt-library-app/api/:path*"
     },
     {
       "source": "/((?!api).*)",
