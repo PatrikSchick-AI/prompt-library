@@ -2,11 +2,11 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { supabase } from '../lib/_supabase.js';
 import { corsHeaders, requireAdminKey, errorResponse, successResponse } from '../lib/_middleware.js';
 import { createPromptSchema } from '../../src/lib/validators.js';
-import { parseAndMapMarkdownPrompts, type MarkdownPromptInput } from '../../src/lib/markdownPrompts.js';
+import { parseAndMapCSVPrompts, type CSVPromptInput } from '../../src/lib/csvPrompts.js';
 
-const PROMPTS_MD_URL =
-  process.env.AWESOME_PROMPTS_MD_URL ||
-  'https://raw.githubusercontent.com/openai/prompt-library/main/PROMPTS.md';
+const PROMPTS_CSV_URL =
+  process.env.AWESOME_PROMPTS_CSV_URL ||
+  'https://raw.githubusercontent.com/f/awesome-chatgpt-prompts/main/prompts.csv';
 const PURPOSE_FILTER = process.env.AWESOME_PROMPTS_PURPOSE || 'awesome-chatgpt-prompts';
 const DEFAULT_TAGS = ['awesome-chatgpt-prompts', 'imported'];
 const PAGE_SIZE = 100;
@@ -46,8 +46,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
 }
 
 async function importAwesomePrompts(): Promise<ImportSummary> {
-  const markdown = await fetchMarkdown();
-  const prompts = parseAndMapMarkdownPrompts(markdown, {
+  const csv = await fetchCSV();
+  const prompts = parseAndMapCSVPrompts(csv, {
     defaultPurpose: PURPOSE_FILTER,
     defaultTags: DEFAULT_TAGS,
   });
@@ -80,7 +80,7 @@ async function importAwesomePrompts(): Promise<ImportSummary> {
   }
 
   return {
-    sourceUrl: PROMPTS_MD_URL,
+    sourceUrl: PROMPTS_CSV_URL,
     totalParsed: prompts.length,
     existing: prompts.length - newPrompts.length,
     imported,
@@ -88,15 +88,15 @@ async function importAwesomePrompts(): Promise<ImportSummary> {
   };
 }
 
-async function fetchMarkdown(): Promise<string> {
-  const response = await fetch(PROMPTS_MD_URL, {
+async function fetchCSV(): Promise<string> {
+  const response = await fetch(PROMPTS_CSV_URL, {
     headers: {
       'User-Agent': 'prompt-library-importer',
     },
   });
 
   if (!response.ok) {
-    throw new Error(`Failed to fetch PROMPTS.md: ${response.status} ${response.statusText}`);
+    throw new Error(`Failed to fetch prompts.csv: ${response.status} ${response.statusText}`);
   }
 
   return response.text();
@@ -131,7 +131,7 @@ async function fetchExistingPromptNames(purpose: string): Promise<Set<string>> {
   return existingNames;
 }
 
-function dedupeByName(prompts: MarkdownPromptInput[]): MarkdownPromptInput[] {
+function dedupeByName(prompts: CSVPromptInput[]): CSVPromptInput[] {
   const seen = new Set<string>();
   return prompts.filter((prompt) => {
     const normalized = prompt.name.trim().toLowerCase();
@@ -143,7 +143,7 @@ function dedupeByName(prompts: MarkdownPromptInput[]): MarkdownPromptInput[] {
   });
 }
 
-async function createPrompt(prompt: MarkdownPromptInput): Promise<boolean> {
+async function createPrompt(prompt: CSVPromptInput): Promise<boolean> {
   const validationResult = createPromptSchema.safeParse({
     name: prompt.name,
     description: prompt.description,
