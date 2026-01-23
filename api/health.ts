@@ -16,20 +16,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   // Check required environment variables
-  const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
-  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const convexActionsUrl =
+    process.env.CONVEX_HTTP_ACTIONS_URL || process.env.CONVEX_SITE_URL;
+  const convexActionsSecret = process.env.CONVEX_HTTP_ACTIONS_SECRET;
   const adminKey = process.env.ADMIN_KEY;
 
   const missing: string[] = [];
   
-  if (!supabaseUrl) {
-    missing.push('SUPABASE_URL (or VITE_SUPABASE_URL)');
+  if (!convexActionsUrl) {
+    missing.push('CONVEX_HTTP_ACTIONS_URL (or CONVEX_SITE_URL)');
   }
-  
-  if (!supabaseServiceKey) {
-    missing.push('SUPABASE_SERVICE_ROLE_KEY');
-  }
-  
+
   if (!adminKey) {
     missing.push('ADMIN_KEY');
   }
@@ -47,8 +44,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     ok: true,
     message: 'API is healthy',
     env: {
-      supabaseUrl: supabaseUrl.substring(0, 20) + '...',
-      hasServiceKey: !!supabaseServiceKey,
+      convexActionsUrl: convexActionsUrl?.substring(0, 40) + '...',
+      hasConvexActionsSecret: !!convexActionsSecret,
       hasAdminKey: !!adminKey,
     },
   });

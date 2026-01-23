@@ -4,20 +4,18 @@
 
 ### Prerequisites
 
-1. Supabase project set up with schema
+1. Convex project with HTTP actions enabled
 2. Vercel account
 3. Repository pushed to GitHub (optional but recommended)
 
 ### Step-by-Step Deployment
 
-#### 1. Prepare Supabase
+#### 1. Prepare Convex
 
-1. Create a new Supabase project at https://supabase.com
-2. Go to SQL Editor and run the schema from `supabase/schema.sql`
-3. Note down your credentials:
-   - Project URL (from Settings → API)
-   - Anon/Public key (from Settings → API)
-   - Service Role key (from Settings → API - keep this secret!)
+1. Create a new Convex project at https://convex.dev
+2. Implement HTTP actions that mirror the Vercel API routes (e.g. `/api/prompts`, `/api/prompts/:id`)
+3. Note down your Convex deployment site URL (e.g. `https://your-deployment.convex.site/api`)
+4. (Optional) Create a shared secret for Vercel → Convex requests
 
 #### 2. Deploy to Vercel
 
@@ -33,8 +31,8 @@
 
 4. Add Environment Variables:
    ```
-   VITE_SUPABASE_URL=https://your-project.supabase.co
-   SUPABASE_SERVICE_ROLE_KEY=your_service_role_key_here
+   CONVEX_HTTP_ACTIONS_URL=https://your-deployment.convex.site/api
+   CONVEX_HTTP_ACTIONS_SECRET=your_optional_shared_secret
    ADMIN_KEY=your_secure_admin_key_here
    ```
 
@@ -60,8 +58,8 @@
 
 4. Follow prompts, then add environment variables:
    ```bash
-   vercel env add VITE_SUPABASE_URL
-   vercel env add SUPABASE_SERVICE_ROLE_KEY
+   vercel env add CONVEX_HTTP_ACTIONS_URL
+   vercel env add CONVEX_HTTP_ACTIONS_SECRET
    vercel env add ADMIN_KEY
    ```
 
@@ -93,13 +91,13 @@
 
 | Variable | Required | Description | Where to Use |
 |----------|----------|-------------|--------------|
-| `VITE_SUPABASE_URL` | Yes | Supabase project URL | Client & Server |
-| `SUPABASE_SERVICE_ROLE_KEY` | Yes | Service role key (server-only) | Server only |
+| `CONVEX_HTTP_ACTIONS_URL` | Yes | Convex HTTP actions base URL | Server only |
+| `CONVEX_HTTP_ACTIONS_SECRET` | Optional | Shared secret for Convex HTTP actions | Server only |
 | `ADMIN_KEY` | Yes | Shared secret for write operations | Server only |
 | `VITE_ADMIN_KEY` | Optional | Admin key for client (if needed) | Client only |
 
 **Security Notes:**
-- `SUPABASE_SERVICE_ROLE_KEY` should **never** be exposed to the client
+- `CONVEX_HTTP_ACTIONS_SECRET` should **never** be exposed to the client
 - `ADMIN_KEY` protects all write operations (POST/PUT/DELETE)
 - Use a strong, unique key for `ADMIN_KEY` (e.g., `openssl rand -base64 32`)
 - For production, consider using Vercel's encrypted environment variables
@@ -112,7 +110,7 @@
 
 2. **Monitor Logs**
    - Check Vercel function logs for errors
-   - Monitor Supabase dashboard for query performance
+   - Monitor Convex dashboard for query performance
 
 3. **Test All Features**
    - Create prompt
@@ -132,10 +130,10 @@
 - Verify CORS headers in `api/lib/middleware.ts`
 - Check browser console for specific CORS error
 
-**Issue: Database connection errors**
-- Verify `VITE_SUPABASE_URL` is correct
-- Check `SUPABASE_SERVICE_ROLE_KEY` is valid
-- Confirm Supabase project is active
+**Issue: Convex proxy errors**
+- Verify `CONVEX_HTTP_ACTIONS_URL` points to your Convex deployment
+- Ensure your Convex HTTP actions are deployed and reachable
+- Confirm the optional `CONVEX_HTTP_ACTIONS_SECRET` matches on both sides
 
 **Issue: Unauthorized errors on write operations**
 - Verify `X-Admin-Key` header is being sent
@@ -152,13 +150,12 @@ Vercel automatically deploys on git push when connected to a repository:
 
 ### Local Development with Production Data
 
-If you want to test locally with production Supabase:
+If you want to test locally with production Convex:
 
 ```bash
 # .env.local
-VITE_SUPABASE_URL=https://your-production.supabase.co
-VITE_SUPABASE_ANON_KEY=your_production_anon_key
-SUPABASE_SERVICE_ROLE_KEY=your_production_service_key
+CONVEX_HTTP_ACTIONS_URL=https://your-production.convex.site/api
+CONVEX_HTTP_ACTIONS_SECRET=your_production_shared_secret
 ADMIN_KEY=your_production_admin_key
 VITE_ADMIN_KEY=your_production_admin_key
 ```
@@ -168,16 +165,14 @@ VITE_ADMIN_KEY=your_production_admin_key
 ### Scaling Considerations
 
 - Vercel Functions have a 10s timeout by default (configurable)
-- Supabase free tier has usage limits
+- Convex free tier has usage limits
 - Consider caching for high-traffic scenarios
 - Monitor function execution time in Vercel dashboard
 
 ### Backup Strategy
 
 1. **Database Backups**
-   - Supabase Pro includes automated backups
-   - For manual backups: use Supabase Studio → Database → Backups
-   - Export data periodically: `pg_dump` via Supabase connection string
+   - Use Convex exports or snapshot tools as needed
 
 2. **Code Backups**
    - Use Git for version control

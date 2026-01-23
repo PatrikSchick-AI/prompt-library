@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { supabase } from '../../lib/supabase';
-import { corsHeaders, requireAdminKey, errorResponse, successResponse } from '../../lib/middleware';
+import { callConvexAction } from '../../lib/convex';
+import { corsHeaders, requireAdminKey, errorResponse } from '../../lib/middleware';
 import { StatusChangeRequestSchema } from '../../../src/lib/validators';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -32,47 +32,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return errorResponse(res, validationResult.error.errors[0].message, 400);
       }
 
-      const { status, comment } = validationResult.data;
+      const { status, body } = await callConvexAction<unknown>(
+        `/prompts/${id}/status`,
+        {
+          method: 'POST',
+          body: validationResult.data,
+        }
+      );
 
-      // Get current prompt
-      const { data: prompt, error: fetchError } = await supabase
-        .from('prompts')
-        .select('status')
-        .eq('id', id)
-        .single();
-
-      if (fetchError || !prompt) {
-        return errorResponse(res, 'Prompt not found', 404);
-      }
-
-      const oldStatus = prompt.status;
-
-      // Update status
-      const { data: updatedPrompt, error: updateError } = await supabase
-        .from('prompts')
-        .update({ status })
-        .eq('id', id)
-        .select()
-        .single();
-
-      if (updateError || !updatedPrompt) {
-        console.error('Status update error:', updateError);
-        return errorResponse(res, 'Failed to update status', 500);
-      }
-
-      // Log event
-      await supabase.from('prompt_events').insert({
-        prompt_id: id,
-        event_type: 'status_changed',
-        comment,
-        metadata: {
-          from_status: oldStatus,
-          to_status: status,
-        },
-        created_by: req.body.author,
-      });
-
-      return successResponse(res, updatedPrompt);
+      return res.status(status).json(body);
     }
 
     return errorResponse(res, 'Method not allowed', 405);

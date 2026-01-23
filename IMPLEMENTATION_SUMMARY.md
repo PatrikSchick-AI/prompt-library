@@ -102,6 +102,17 @@ All 64 tests passing:
 - ✅ 20 validator tests (including new max-length tests)
 - ✅ 8 CreatePrompt component tests
 
+## 4. Convex HTTP Actions Proxy (Chosen Approach)
+
+### What Changed
+- Vercel API routes now forward requests to Convex HTTP actions instead of querying Supabase directly.
+- A shared Convex proxy helper centralizes URL construction and optional shared-secret auth.
+
+### Environment Variables
+- `CONVEX_HTTP_ACTIONS_URL` (or `CONVEX_SITE_URL`) for the base HTTP actions URL
+- `CONVEX_HTTP_ACTIONS_SECRET` (optional) for shared-secret authentication between Vercel and Convex
+- `ADMIN_KEY` for admin-protected endpoints (unchanged)
+
 ## Usage Instructions
 
 ### Creating Prompts via UI
