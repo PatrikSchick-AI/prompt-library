@@ -1,8 +1,8 @@
 #!/usr/bin/env tsx
 
-import { parseAndMapAwesomePrompts } from '../src/lib/awesomePrompts';
+import { parseAndMapAwesomePromptsMarkdown } from '../src/lib/awesomePrompts';
 
-const AWESOME_PROMPTS_CSV_URL = 'https://raw.githubusercontent.com/f/awesome-chatgpt-prompts/main/prompts.csv';
+const AWESOME_PROMPTS_MARKDOWN_URL = 'https://raw.githubusercontent.com/f/awesome-chatgpt-prompts/main/PROMPTS.md';
 const API_BASE_URL = process.env.PROMPT_LIBRARY_API_BASE_URL || 'http://localhost:3000/api';
 const CONCURRENCY_LIMIT = 5;
 const PURPOSE_FILTER = 'awesome-chatgpt-prompts';
@@ -23,18 +23,18 @@ interface PaginatedResponse {
 }
 
 /**
- * Fetch CSV from GitHub
+ * Fetch Markdown from GitHub
  */
-async function fetchCSV(): Promise<string> {
-  console.log(`Fetching CSV from ${AWESOME_PROMPTS_CSV_URL}...`);
-  const response = await fetch(AWESOME_PROMPTS_CSV_URL);
+async function fetchMarkdown(): Promise<string> {
+  console.log(`Fetching Markdown from ${AWESOME_PROMPTS_MARKDOWN_URL}...`);
+  const response = await fetch(AWESOME_PROMPTS_MARKDOWN_URL);
   
   if (!response.ok) {
-    throw new Error(`Failed to fetch CSV: ${response.statusText}`);
+    throw new Error(`Failed to fetch Markdown: ${response.statusText}`);
   }
   
   const text = await response.text();
-  console.log(`✓ Fetched CSV (${text.length} bytes)`);
+  console.log(`✓ Fetched Markdown (${text.length} bytes)`);
   return text;
 }
 
@@ -77,7 +77,7 @@ async function fetchExistingPrompts(): Promise<Set<string>> {
 /**
  * Create a single prompt
  */
-async function createPrompt(prompt: ReturnType<typeof parseAndMapAwesomePrompts>[0]): Promise<boolean> {
+async function createPrompt(prompt: ReturnType<typeof parseAndMapAwesomePromptsMarkdown>[0]): Promise<boolean> {
   try {
     const response = await fetch(`${API_BASE_URL}/prompts`, {
       method: 'POST',
@@ -104,7 +104,7 @@ async function createPrompt(prompt: ReturnType<typeof parseAndMapAwesomePrompts>
  * Create prompts with limited concurrency
  */
 async function createPromptsWithConcurrency(
-  prompts: ReturnType<typeof parseAndMapAwesomePrompts>,
+  prompts: ReturnType<typeof parseAndMapAwesomePromptsMarkdown>,
   concurrency: number
 ): Promise<{ success: number; failed: number }> {
   let success = 0;
@@ -143,16 +143,16 @@ async function main() {
   console.log(`Purpose filter: ${PURPOSE_FILTER}\n`);
   
   try {
-    // Step 1: Fetch CSV
-    const csvText = await fetchCSV();
+    // Step 1: Fetch Markdown
+    const markdownText = await fetchMarkdown();
     
     // Step 2: Parse and map prompts
-    console.log('\nParsing CSV...');
-    const allPrompts = parseAndMapAwesomePrompts(csvText);
+    console.log('\nParsing Markdown...');
+    const allPrompts = parseAndMapAwesomePromptsMarkdown(markdownText);
     console.log(`✓ Parsed ${allPrompts.length} prompts`);
     
     if (allPrompts.length === 0) {
-      console.log('\n⚠ No prompts found in CSV');
+      console.log('\n⚠ No prompts found in Markdown');
       return;
     }
     
@@ -174,7 +174,7 @@ async function main() {
     
     // Step 6: Summary
     console.log('\n=== Import Summary ===');
-    console.log(`Total prompts in CSV: ${allPrompts.length}`);
+    console.log(`Total prompts in Markdown: ${allPrompts.length}`);
     console.log(`Already existed: ${allPrompts.length - newPrompts.length}`);
     console.log(`Successfully created: ${success}`);
     console.log(`Failed: ${failed}`);
