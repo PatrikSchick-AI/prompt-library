@@ -1,12 +1,12 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { callConvexAction } from '../../../../lib/_convex';
-import { corsHeaders, requireAdminKey, errorResponse } from '../../../../lib/_middleware';
-import { RollbackRequestSchema } from '../../../../../src/lib/validators';
+import { callConvexAction } from '../../../../lib/_convex.js';
+import { corsHeaders, requireAdminKey, errorResponse } from '../../../../lib/_middleware.js';
+import { RollbackRequestSchema } from '../../../../../src/lib/validators.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Set CORS headers
   Object.entries(corsHeaders()).forEach(([key, value]) => {
-    res.setHeader(key, value);
+    res.setHeader(key, value as string);
   });
 
   // Handle OPTIONS
@@ -14,7 +14,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(200).end();
   }
 
-  const { id, version } = req.query;
+  const { id, version } = req.query as { id: string; version: string };
 
   if (!id || typeof id !== 'string' || !version || typeof version !== 'string') {
     return errorResponse(res, 'Invalid prompt ID or version', 400);

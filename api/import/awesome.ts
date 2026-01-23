@@ -1,8 +1,8 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { supabase } from '../lib/_supabase';
-import { corsHeaders, requireAdminKey, errorResponse, successResponse } from '../lib/_middleware';
-import { createPromptSchema } from '../../src/lib/validators';
-import { parseAndMapMarkdownPrompts, type MarkdownPromptInput } from '../../src/lib/markdownPrompts';
+import { supabase } from '../lib/_supabase.js';
+import { corsHeaders, requireAdminKey, errorResponse, successResponse } from '../lib/_middleware.js';
+import { createPromptSchema } from '../../src/lib/validators.js';
+import { parseAndMapMarkdownPrompts, type MarkdownPromptInput } from '../../src/lib/markdownPrompts.js';
 
 const PROMPTS_MD_URL =
   process.env.AWESOME_PROMPTS_MD_URL ||
@@ -19,7 +19,7 @@ interface ImportSummary {
   failed: number;
 }
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+export default async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
   Object.entries(corsHeaders()).forEach(([key, value]) => {
     res.setHeader(key, value);
   });

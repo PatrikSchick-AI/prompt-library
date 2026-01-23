@@ -1,12 +1,12 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { callConvexAction } from './lib/_convex';
-import { corsHeaders, errorResponse } from './lib/_middleware';
-import { createPromptSchema, SearchPromptsSchema } from '../src/lib/validators';
+import { callConvexAction } from './lib/_convex.js';
+import { corsHeaders, errorResponse } from './lib/_middleware.js';
+import { createPromptSchema, SearchPromptsSchema } from '../src/lib/validators.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Set CORS headers
   Object.entries(corsHeaders()).forEach(([key, value]) => {
-    res.setHeader(key, value);
+    res.setHeader(key, value as string);
   });
 
   // Handle OPTIONS
