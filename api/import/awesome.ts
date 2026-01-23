@@ -187,7 +187,7 @@ async function createPrompt(prompt: CSVPromptInput): Promise<boolean> {
     .insert({
       prompt_id: createdPrompt.id,
       version_number: '1.0.0',
-      change_description: 'Imported from PROMPTS.md',
+      change_description: 'Imported from awesome-chatgpt-prompts CSV',
       content: data.content,
       system_prompt: data.system_prompt,
       models: data.models,
@@ -215,7 +215,7 @@ async function createPrompt(prompt: CSVPromptInput): Promise<boolean> {
   await supabase.from('prompt_events').insert({
     prompt_id: createdPrompt.id,
     event_type: 'created',
-    metadata: { initial_version: '1.0.0', source: 'PROMPTS.md' },
+    metadata: { initial_version: '1.0.0', source: 'awesome-chatgpt-prompts CSV' },
     created_by: data.author,
   });
 
