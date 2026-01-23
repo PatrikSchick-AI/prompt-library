@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { callConvexAction } from './lib/convex';
-import { corsHeaders, errorResponse } from './lib/middleware';
+import { callConvexAction } from './lib/_convex';
+import { corsHeaders, errorResponse } from './lib/_middleware';
 import { createPromptSchema, SearchPromptsSchema } from '../src/lib/validators';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {

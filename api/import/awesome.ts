@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { supabase } from '../lib/supabase';
-import { corsHeaders, requireAdminKey, errorResponse, successResponse } from '../lib/middleware';
+import { supabase } from '../lib/_supabase';
+import { corsHeaders, requireAdminKey, errorResponse, successResponse } from '../lib/_middleware';
 import { createPromptSchema } from '../../src/lib/validators';
 import { parseAndMapMarkdownPrompts, type MarkdownPromptInput } from '../../src/lib/markdownPrompts';
 
