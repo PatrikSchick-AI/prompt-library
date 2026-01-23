@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { supabase } from '../lib/_supabase.js';
+import { callConvexAction } from '../lib/_convex.js';
 import { corsHeaders, requireAdminKey, errorResponse, successResponse } from '../lib/_middleware.js';
 import { createPromptSchema } from '../../src/lib/validators.js';
 import { parseAndMapCSVPrompts, type CSVPromptInput } from '../../src/lib/csvPrompts.js';
@@ -9,7 +9,6 @@ const PROMPTS_CSV_URL =
   'https://raw.githubusercontent.com/f/awesome-chatgpt-prompts/main/prompts.csv';
 const PURPOSE_FILTER = process.env.AWESOME_PROMPTS_PURPOSE || 'awesome-chatgpt-prompts';
 const DEFAULT_TAGS = ['awesome-chatgpt-prompts', 'imported'];
-const PAGE_SIZE = 100;
 
 interface ImportSummary {
   sourceUrl: string;
@@ -104,28 +103,30 @@ async function fetchCSV(): Promise<string> {
 
 async function fetchExistingPromptNames(purpose: string): Promise<Set<string>> {
   const existingNames = new Set<string>();
-  let offset = 0;
 
-  while (true) {
-    const { data, error } = await supabase
-      .from('prompts')
-      .select('name')
-      .eq('purpose', purpose)
-      .range(offset, offset + PAGE_SIZE - 1);
+  // Use Convex search API to get prompts by purpose
+  const convexQuery: VercelRequest['query'] = {
+    purpose: purpose,
+    limit: '1000', // Get all prompts for this purpose
+  };
 
-    if (error) {
-      throw new Error(`Failed to fetch existing prompts: ${error.message}`);
-    }
+  const { status, body } = await callConvexAction<unknown>('/prompts', {
+    method: 'GET',
+    query: convexQuery,
+  });
 
-    data?.forEach((prompt) => {
-      existingNames.add(prompt.name);
+  if (status !== 200) {
+    throw new Error(`Failed to fetch existing prompts: HTTP ${status}`);
+  }
+
+  // Assume body is an array of prompts with 'name' property
+  const prompts = body as any[];
+  if (Array.isArray(prompts)) {
+    prompts.forEach((prompt) => {
+      if (prompt.name) {
+        existingNames.add(prompt.name);
+      }
     });
-
-    if (!data || data.length < PAGE_SIZE) {
-      break;
-    }
-
-    offset += PAGE_SIZE;
   }
 
   return existingNames;
@@ -164,60 +165,23 @@ async function createPrompt(prompt: CSVPromptInput): Promise<boolean> {
 
   const data = validationResult.data;
 
-  const { data: createdPrompt, error: promptError } = await supabase
-    .from('prompts')
-    .insert({
-      name: data.name,
-      description: data.description,
-      purpose: data.purpose,
-      tags: data.tags,
-      owner: data.owner,
-      status: 'draft',
-    })
-    .select()
-    .single();
-
-  if (promptError || !createdPrompt) {
-    console.error('Create prompt error:', promptError);
-    return false;
-  }
-
-  const { data: version, error: versionError } = await supabase
-    .from('prompt_versions')
-    .insert({
-      prompt_id: createdPrompt.id,
-      version_number: '1.0.0',
-      change_description: 'Imported from awesome-chatgpt-prompts CSV',
-      content: data.content,
-      system_prompt: data.system_prompt,
-      models: data.models,
-      model_config: data.model_config,
-      author: data.author,
-    })
-    .select()
-    .single();
-
-  if (versionError || !version) {
-    console.error('Create version error:', versionError);
-    await supabase.from('prompts').delete().eq('id', createdPrompt.id);
-    return false;
-  }
-
-  const { error: updateError } = await supabase
-    .from('prompts')
-    .update({ current_version_id: version.id })
-    .eq('id', createdPrompt.id);
-
-  if (updateError) {
-    console.error('Update prompt error:', updateError);
-  }
-
-  await supabase.from('prompt_events').insert({
-    prompt_id: createdPrompt.id,
-    event_type: 'created',
-    metadata: { initial_version: '1.0.0', source: 'awesome-chatgpt-prompts CSV' },
-    created_by: data.author,
+  // Use Convex API to create the prompt
+  const { status, body } = await callConvexAction<unknown>('/prompts', {
+    method: 'POST',
+    body: data,
   });
+
+  if (status !== 201 && status !== 200) {
+    console.error('Create prompt error:', status, body);
+    return false;
+  }
+
+  // Assume the response contains the created prompt
+  const createdPrompt = body as any;
+  if (!createdPrompt || !createdPrompt.id) {
+    console.error('Invalid response from Convex API:', body);
+    return false;
+  }
 
   return true;
 }
