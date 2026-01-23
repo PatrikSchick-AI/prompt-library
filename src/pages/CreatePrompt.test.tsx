@@ -2,12 +2,18 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import CreatePrompt from './CreatePrompt';
-import * as api from '../lib/api';
 
-// Mock the API
-vi.mock('../lib/api', () => ({
-  promptsApi: {
-    create: vi.fn(),
+// Mock Convex
+const mockUseMutation = vi.fn();
+vi.mock('convex/react', () => ({
+  useMutation: () => mockUseMutation,
+}));
+
+vi.mock('../../convex/_generated/api', () => ({
+  api: {
+    prompts: {
+      create: 'mock-create-mutation',
+    },
   },
 }));
 
@@ -57,14 +63,14 @@ describe('CreatePrompt', () => {
 
     // Wait a bit to ensure no API call was made
     await new Promise(resolve => setTimeout(resolve, 100));
-    
-    // API should not have been called with invalid data
-    expect(api.promptsApi.create).not.toHaveBeenCalled();
+
+    // Mutation should not have been called with invalid data
+    expect(mockUseMutation).not.toHaveBeenCalled();
   });
 
   it('should submit valid form data', async () => {
     const mockPromptId = 'test-prompt-id';
-    vi.mocked(api.promptsApi.create).mockResolvedValue({ id: mockPromptId });
+    mockUseMutation.mockResolvedValue({ id: mockPromptId });
 
     renderComponent();
 
@@ -84,7 +90,7 @@ describe('CreatePrompt', () => {
     fireEvent.click(submitButton);
 
     await waitFor(() => {
-      expect(api.promptsApi.create).toHaveBeenCalledWith(
+      expect(mockUseMutation).toHaveBeenCalledWith(
         expect.objectContaining({
           name: 'Test Prompt',
           purpose: 'testing',
@@ -97,7 +103,7 @@ describe('CreatePrompt', () => {
 
   it('should parse comma-separated tags correctly', async () => {
     const mockPromptId = 'test-prompt-id';
-    vi.mocked(api.promptsApi.create).mockResolvedValue({ id: mockPromptId });
+    mockUseMutation.mockResolvedValue({ id: mockPromptId });
 
     renderComponent();
 
@@ -120,7 +126,7 @@ describe('CreatePrompt', () => {
     fireEvent.click(submitButton);
 
     await waitFor(() => {
-      expect(api.promptsApi.create).toHaveBeenCalledWith(
+      expect(mockUseMutation).toHaveBeenCalledWith(
         expect.objectContaining({
           tags: ['tag1', 'tag2', 'tag3'],
         })
@@ -130,7 +136,7 @@ describe('CreatePrompt', () => {
 
   it('should parse comma-separated models correctly', async () => {
     const mockPromptId = 'test-prompt-id';
-    vi.mocked(api.promptsApi.create).mockResolvedValue({ id: mockPromptId });
+    mockUseMutation.mockResolvedValue({ id: mockPromptId });
 
     renderComponent();
 
@@ -153,7 +159,7 @@ describe('CreatePrompt', () => {
     fireEvent.click(submitButton);
 
     await waitFor(() => {
-      expect(api.promptsApi.create).toHaveBeenCalledWith(
+      expect(mockUseMutation).toHaveBeenCalledWith(
         expect.objectContaining({
           models: ['gpt-4', 'claude-3', 'gemini-pro'],
         })
@@ -162,7 +168,7 @@ describe('CreatePrompt', () => {
   });
 
   it('should handle API errors', async () => {
-    vi.mocked(api.promptsApi.create).mockRejectedValue(
+    mockUseMutation.mockRejectedValue(
       new Error('Network error')
     );
 
@@ -189,7 +195,7 @@ describe('CreatePrompt', () => {
   });
 
   it('should disable submit button while loading', async () => {
-    vi.mocked(api.promptsApi.create).mockImplementation(
+    mockUseMutation.mockImplementation(
       () => new Promise((resolve) => setTimeout(() => resolve({ id: 'test' }), 100))
     );
 
@@ -239,7 +245,7 @@ describe('CreatePrompt', () => {
 
     // Should successfully submit at the limit
     await waitFor(() => {
-      expect(api.promptsApi.create).toHaveBeenCalled();
+      expect(mockUseMutation).toHaveBeenCalled();
     });
   });
 });

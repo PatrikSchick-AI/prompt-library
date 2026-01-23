@@ -1,45 +1,19 @@
-import { useState, useEffect } from 'react';
-import { promptsApi } from '../lib/api';
+import { useQuery } from 'convex/react';
+import { api } from '../../convex/_generated/api';
 import type { PromptWithVersion } from '../types/prompt';
 
 interface UsePromptResult {
   prompt: PromptWithVersion | null;
   loading: boolean;
-  error: string | null;
-  refresh: () => void;
+  error: Error | null;
 }
 
 export function usePrompt(id: string | undefined): UsePromptResult {
-  const [prompt, setPrompt] = useState<PromptWithVersion | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchPrompt = async () => {
-    if (!id) {
-      setLoading(false);
-      return;
-    }
-
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await promptsApi.get(id) as PromptWithVersion;
-      setPrompt(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch prompt');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchPrompt();
-  }, [id]);
+  const prompt = useQuery(api.prompts.get, id ? { id } : 'skip');
 
   return {
-    prompt,
-    loading,
-    error,
-    refresh: fetchPrompt,
+    prompt: prompt || null,
+    loading: prompt === undefined,
+    error: null, // Convex handles errors differently
   };
 }

@@ -1,37 +1,16 @@
-import { useState, useEffect } from 'react';
+import { useQuery } from 'convex/react';
 import { useParams, Link } from 'react-router-dom';
-import { versionsApi } from '../lib/api';
+import { api } from '../../convex/_generated/api';
 import type { PromptVersion } from '../types/prompt';
 
 const VersionComparison = () => {
   const { id, v1, v2 } = useParams<{ id: string; v1: string; v2: string }>();
-  const [version1, setVersion1] = useState<PromptVersion | null>(null);
-  const [version2, setVersion2] = useState<PromptVersion | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchVersions = async () => {
-      if (!id || !v1 || !v2) return;
+  const version1 = useQuery(api.versions.get, id && v1 ? { promptId: id, version: v1 } : 'skip');
+  const version2 = useQuery(api.versions.get, id && v2 ? { promptId: id, version: v2 } : 'skip');
 
-      try {
-        setLoading(true);
-        setError(null);
-        const [ver1, ver2] = await Promise.all([
-          versionsApi.get(id, v1) as Promise<PromptVersion>,
-          versionsApi.get(id, v2) as Promise<PromptVersion>,
-        ]);
-        setVersion1(ver1);
-        setVersion2(ver2);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to fetch versions');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchVersions();
-  }, [id, v1, v2]);
+  const loading = version1 === undefined || version2 === undefined;
+  const error = null; // Convex handles errors differently
 
   if (loading) {
     return (

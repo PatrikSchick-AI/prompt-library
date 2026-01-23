@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { promptsApi } from '../lib/api';
+import { useMutation } from 'convex/react';
+import { api } from '../../convex/_generated/api';
 import { createPromptSchema } from '../lib/validators';
 import { z } from 'zod';
 
@@ -19,6 +20,7 @@ interface FormErrors {
 
 const CreatePrompt = () => {
   const navigate = useNavigate();
+  const createPrompt = useMutation(api.prompts.create);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
   
@@ -45,7 +47,7 @@ const CreatePrompt = () => {
         .split(',')
         .map((t) => t.trim())
         .filter((t) => t.length > 0);
-      
+
       const models = formData.models
         .split(',')
         .map((m) => m.trim())
@@ -58,8 +60,8 @@ const CreatePrompt = () => {
         purpose: formData.purpose,
         content: formData.content,
         system_prompt: formData.system_prompt || undefined,
-        tags: tags.length > 0 ? tags : undefined,
-        models: models.length > 0 ? models : undefined,
+        tags,
+        models,
         author: formData.author || undefined,
         owner: formData.owner || undefined,
       };
@@ -68,8 +70,8 @@ const CreatePrompt = () => {
       const validated = createPromptSchema.parse(data);
 
       // Create prompt
-      const result = await promptsApi.create(validated) as { id: string };
-      
+      const result = await createPrompt(validated);
+
       // Navigate to the new prompt
       navigate(`/prompts/${result.id}`);
     } catch (error) {

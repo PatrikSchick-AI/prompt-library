@@ -11,12 +11,10 @@
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:run": "vitest run",
-    "import:awesome": "tsx scripts/importAwesomePrompts.ts",
-    "migrate:supabase-to-convex": "tsx scripts/migrateSupabaseToConvex.ts"
+    "import:awesome": "tsx scripts/importAwesomePrompts.ts"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.90.1",
-    "@vercel/node": "^5.5.24",
+    "convex": "^1.17.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-router-dom": "^7.12.0",
@@ -33,6 +31,7 @@
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.1.1",
     "autoprefixer": "^10.4.23",
+    "convex": "^1.17.0",
     "eslint": "^9.39.1",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.4.24",
