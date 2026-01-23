@@ -11,7 +11,8 @@
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:run": "vitest run",
-    "import:awesome": "tsx scripts/importAwesomePrompts.ts"
+    "import:awesome": "tsx scripts/importAwesomePrompts.ts",
+    "migrate:supabase-to-convex": "tsx scripts/migrateSupabaseToConvex.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.90.1",
