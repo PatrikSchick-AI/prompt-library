@@ -145,6 +145,13 @@ vercel --prod
 - `GET /api/tags` - Get all tags with usage counts
 - `GET /api/purposes` - Get all purposes with usage counts
 
+### Imports
+
+- `POST /api/import/awesome` - Import prompts from `PROMPTS.md` (requires admin key)
+  - Uses `AWESOME_PROMPTS_MD_URL` (defaults to `https://raw.githubusercontent.com/openai/prompt-library/main/PROMPTS.md`)
+  - Uses `AWESOME_PROMPTS_PURPOSE` for purpose filtering (defaults to `awesome-chatgpt-prompts`)
+  - Requires `X-Admin-Key` header
+
 ## Security
 
 - **Read operations**: Public (anyone can read prompts)
