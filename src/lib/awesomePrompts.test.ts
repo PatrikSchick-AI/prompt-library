@@ -4,6 +4,7 @@ import {
   parseAwesomePromptRow,
   mapAwesomePromptToLibrary,
   parseAndMapAwesomePrompts,
+  parseAndMapAwesomePromptsMarkdown,
   type AwesomePromptRow,
 } from './awesomePrompts';
 
@@ -265,6 +266,48 @@ newlines"`;
       expect(result[0].name).toBe('Act with, comma');
       expect(result[0].content).toContain('quotes');
       expect(result[0].content).toContain('\n');
+    });
+  });
+
+  describe('parseAndMapAwesomePromptsMarkdown', () => {
+    it('should parse prompts from markdown headings', () => {
+      const markdown = `# Awesome ChatGPT Prompts
+
+## Linux Terminal
+> I want you to act as a linux terminal.
+
+## JavaScript Console
+I want you to act as a javascript console.`;
+
+      const result = parseAndMapAwesomePromptsMarkdown(markdown);
+
+      expect(result).toHaveLength(2);
+      expect(result[0]).toEqual({
+        name: 'Linux Terminal',
+        description: 'Imported from awesome-chatgpt-prompts',
+        purpose: 'awesome-chatgpt-prompts',
+        tags: ['awesome-chatgpt-prompts', 'imported'],
+        content: 'I want you to act as a linux terminal.',
+        author: undefined,
+      });
+      expect(result[1].name).toBe('JavaScript Console');
+      expect(result[1].content).toBe('I want you to act as a javascript console.');
+    });
+
+    it('should ignore empty prompt sections', () => {
+      const markdown = `# Awesome ChatGPT Prompts
+
+## Empty Prompt
+
+## Filled Prompt
+> First line
+> Second line`;
+
+      const result = parseAndMapAwesomePromptsMarkdown(markdown);
+
+      expect(result).toHaveLength(1);
+      expect(result[0].name).toBe('Filled Prompt');
+      expect(result[0].content).toBe('First line\nSecond line');
     });
   });
 });

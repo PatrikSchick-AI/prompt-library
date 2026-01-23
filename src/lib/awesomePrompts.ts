@@ -20,6 +20,11 @@ export interface PromptLibraryInput {
   author?: string;
 }
 
+interface AwesomeMarkdownPrompt {
+  act: string;
+  prompt: string;
+}
+
 /**
  * Parse CSV text into rows
  * Handles quoted fields with commas and newlines
@@ -154,4 +159,67 @@ export function parseAndMapAwesomePrompts(csvText: string): PromptLibraryInput[]
   }
   
   return results;
+}
+
+function stripBlockquotePrefix(text: string): string {
+  return text
+    .split('\n')
+    .map((line) => line.replace(/^>\s?/, ''))
+    .join('\n');
+}
+
+function parseAwesomePromptsMarkdown(markdownText: string): AwesomeMarkdownPrompt[] {
+  const lines = markdownText.split('\n');
+  const results: AwesomeMarkdownPrompt[] = [];
+  let currentTitle: string | null = null;
+  let buffer: string[] = [];
+
+  const pushCurrent = () => {
+    if (!currentTitle) return;
+    const rawPrompt = buffer.join('\n').trim();
+    if (!rawPrompt) {
+      buffer = [];
+      return;
+    }
+    const prompt = stripBlockquotePrefix(rawPrompt).trim();
+    if (!prompt) {
+      buffer = [];
+      return;
+    }
+    results.push({
+      act: currentTitle,
+      prompt,
+    });
+    buffer = [];
+  };
+
+  for (const line of lines) {
+    const headingMatch = line.match(/^#{2,3}\s+(.*)$/);
+    if (headingMatch) {
+      pushCurrent();
+      currentTitle = headingMatch[1].trim();
+      buffer = [];
+      continue;
+    }
+
+    if (currentTitle) {
+      buffer.push(line);
+    }
+  }
+
+  pushCurrent();
+
+  return results;
+}
+
+export function parseAndMapAwesomePromptsMarkdown(markdownText: string): PromptLibraryInput[] {
+  const prompts = parseAwesomePromptsMarkdown(markdownText);
+
+  return prompts.map((prompt) =>
+    mapAwesomePromptToLibrary({
+      act: prompt.act,
+      prompt: prompt.prompt,
+      for_devs: false,
+    })
+  );
 }
