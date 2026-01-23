@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { supabase } from '../../../lib/supabase';
-import { corsHeaders, errorResponse, successResponse } from '../../../lib/middleware';
+import { callConvexAction } from '../../../lib/convex';
+import { corsHeaders, errorResponse } from '../../../lib/middleware';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Set CORS headers
@@ -22,22 +22,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     // GET /api/prompts/:id/versions/:version - Get specific version
     if (req.method === 'GET') {
-      const { data: versionData, error } = await supabase
-        .from('prompt_versions')
-        .select('*')
-        .eq('prompt_id', id)
-        .eq('version_number', version)
-        .single();
-
-      if (error) {
-        if (error.code === 'PGRST116') {
-          return errorResponse(res, 'Version not found', 404);
+      const { status, body } = await callConvexAction<unknown>(
+        `/prompts/${id}/versions/${version}`,
+        {
+          method: 'GET',
         }
-        console.error('Supabase error:', error);
-        return errorResponse(res, 'Failed to fetch version', 500);
-      }
+      );
 
-      return successResponse(res, versionData);
+      return res.status(status).json(body);
     }
 
     return errorResponse(res, 'Method not allowed', 405);

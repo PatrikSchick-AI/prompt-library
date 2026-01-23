@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { supabase } from './lib/supabase';
-import { corsHeaders, requireAdminKey, errorResponse, successResponse } from './lib/middleware';
+import { callConvexAction } from './lib/convex';
+import { corsHeaders, errorResponse } from './lib/middleware';
 import { createPromptSchema, SearchPromptsSchema } from '../src/lib/validators';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -51,60 +51,24 @@ async function handleGetPrompts(req: VercelRequest, res: VercelResponse) {
     return errorResponse(res, validationResult.error.errors[0].message, 400);
   }
 
-  // Build query
-  let supabaseQuery = supabase
-    .from('prompts')
-    .select(`
-      id,
-      name,
-      description,
-      purpose,
-      tags,
-      status,
-      owner,
-      created_at,
-      updated_at,
-      current_version:prompt_versions!prompts_current_version_id_fkey(
-        version_number,
-        models
-      )
-    `);
+  const convexQuery: VercelRequest['query'] = {
+    search: query.search,
+    tags: query.tags,
+    purpose: query.purpose,
+    status: query.status,
+    models: query.models,
+    sort: query.sort,
+    order: query.order,
+    limit: String(query.limit),
+    offset: String(query.offset),
+  };
 
-  // Apply filters
-  if (query.status && query.status.length > 0) {
-    supabaseQuery = supabaseQuery.in('status', query.status);
-  }
-
-  if (query.purpose) {
-    supabaseQuery = supabaseQuery.eq('purpose', query.purpose);
-  }
-
-  if (query.tags && query.tags.length > 0) {
-    supabaseQuery = supabaseQuery.overlaps('tags', query.tags);
-  }
-
-  // Apply sorting
-  const sortColumn = query.sort === 'rank' ? 'updated_at' : query.sort;
-  supabaseQuery = supabaseQuery.order(sortColumn, { ascending: query.order === 'asc' });
-
-  // Apply pagination
-  supabaseQuery = supabaseQuery.range(query.offset, query.offset + query.limit - 1);
-
-  const { data, error, count } = await supabaseQuery;
-
-  if (error) {
-    console.error('Supabase error:', error);
-    return errorResponse(res, 'Failed to fetch prompts', 500);
-  }
-
-  return successResponse(res, {
-    data: data || [],
-    pagination: {
-      limit: query.limit,
-      offset: query.offset,
-      total: count || 0,
-    },
+  const { status, body } = await callConvexAction<unknown>('/prompts', {
+    method: 'GET',
+    query: convexQuery,
   });
+
+  return res.status(status).json(body);
 }
 
 async function handleCreatePrompt(req: VercelRequest, res: VercelResponse) {
@@ -116,80 +80,10 @@ async function handleCreatePrompt(req: VercelRequest, res: VercelResponse) {
 
   const data = validationResult.data;
 
-  try {
-    // Start transaction: create prompt + initial version
-    const { data: prompt, error: promptError } = await supabase
-      .from('prompts')
-      .insert({
-        name: data.name,
-        description: data.description,
-        purpose: data.purpose,
-        tags: data.tags,
-        owner: data.owner,
-        status: 'draft',
-      })
-      .select()
-      .single();
+  const { status, body } = await callConvexAction<unknown>('/prompts', {
+    method: 'POST',
+    body: data,
+  });
 
-    if (promptError || !prompt) {
-      console.error('Create prompt error:', promptError);
-      return errorResponse(res, 'Failed to create prompt', 500);
-    }
-
-    // Create initial version 1.0.0
-    const { data: version, error: versionError } = await supabase
-      .from('prompt_versions')
-      .insert({
-        prompt_id: prompt.id,
-        version_number: '1.0.0',
-        change_description: 'Initial version',
-        content: data.content,
-        system_prompt: data.system_prompt,
-        models: data.models,
-        model_config: data.model_config,
-        author: data.author,
-      })
-      .select()
-      .single();
-
-    if (versionError || !version) {
-      console.error('Create version error:', versionError);
-      // Rollback: delete prompt
-      await supabase.from('prompts').delete().eq('id', prompt.id);
-      return errorResponse(res, 'Failed to create initial version', 500);
-    }
-
-    // Update prompt with current_version_id
-    const { error: updateError } = await supabase
-      .from('prompts')
-      .update({ current_version_id: version.id })
-      .eq('id', prompt.id);
-
-    if (updateError) {
-      console.error('Update prompt error:', updateError);
-    }
-
-    // Log event
-    await supabase.from('prompt_events').insert({
-      prompt_id: prompt.id,
-      event_type: 'created',
-      metadata: { initial_version: '1.0.0' },
-      created_by: data.author,
-    });
-
-    // Fetch full prompt with version
-    const { data: fullPrompt } = await supabase
-      .from('prompts')
-      .select(`
-        *,
-        current_version:prompt_versions!prompts_current_version_id_fkey(*)
-      `)
-      .eq('id', prompt.id)
-      .single();
-
-    return successResponse(res, fullPrompt, 201);
-  } catch (error) {
-    console.error('Transaction error:', error);
-    return errorResponse(res, 'Failed to create prompt', 500);
-  }
+  return res.status(status).json(body);
 }

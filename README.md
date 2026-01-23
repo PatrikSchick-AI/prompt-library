@@ -16,8 +16,8 @@ A centralized, versioned prompt management system for AI applications.
 ## Tech Stack
 
 - **Frontend**: React 19 + TypeScript + Vite + Tailwind CSS v4
-- **Backend**: Vercel Serverless Functions (TypeScript)
-- **Database**: Supabase (PostgreSQL)
+- **Backend**: Vercel Serverless Functions (TypeScript) proxying Convex HTTP actions
+- **Database**: Convex
 - **Validation**: Zod
 - **Testing**: Vitest + React Testing Library
 
@@ -26,7 +26,7 @@ A centralized, versioned prompt management system for AI applications.
 ### Prerequisites
 
 - Node.js 18+
-- Supabase account
+- Convex account
 - Vercel account (for deployment)
 
 ### Local Development
@@ -38,11 +38,11 @@ cd prompt-library-app
 npm install
 ```
 
-2. **Set up Supabase**
+2. **Set up Convex**
 
-- Create a new Supabase project
-- Run the SQL schema from `supabase/schema.sql` in the SQL Editor
-- Copy your project URL and keys
+- Create a new Convex project
+- Expose HTTP actions that match the Vercel API routes (`/api/prompts`, `/api/prompts/:id`, `/api/prompts/:id/versions`, `/api/prompts/:id/status`, `/api/tags`, `/api/purposes`)
+- Copy your Convex deployment site URL (e.g. `https://your-deployment.convex.site/api`)
 
 3. **Configure environment variables**
 
@@ -55,11 +55,11 @@ cp .env.example .env.local
 Fill in your values:
 
 ```env
-VITE_SUPABASE_URL=https://your-project.supabase.co
-VITE_SUPABASE_ANON_KEY=your_anon_key
-SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+CONVEX_HTTP_ACTIONS_URL=https://your-deployment.convex.site/api
+CONVEX_HTTP_ACTIONS_SECRET=your_optional_shared_secret
 ADMIN_KEY=your_secure_admin_key
 VITE_ADMIN_KEY=your_secure_admin_key
+VITE_API_BASE_URL=/api
 ```
 
 4. **Run development server**
@@ -110,9 +110,9 @@ vercel
 
 Go to your project settings and add:
 
-- `VITE_SUPABASE_URL`
-- `SUPABASE_SERVICE_ROLE_KEY`
 - `ADMIN_KEY`
+- `CONVEX_HTTP_ACTIONS_URL` (or `CONVEX_SITE_URL`)
+- `CONVEX_HTTP_ACTIONS_SECRET` (optional)
 
 4. **Deploy to production**
 
@@ -150,7 +150,7 @@ vercel --prod
 - **Read operations**: Public (anyone can read prompts)
 - **Write operations**: Protected by `X-Admin-Key` header
 - Set a strong `ADMIN_KEY` in your environment variables
-- Keep `SUPABASE_SERVICE_ROLE_KEY` secret (server-side only)
+- Secure Convex HTTP actions with `CONVEX_HTTP_ACTIONS_SECRET` if you want to require a shared secret
 
 ## Architecture
 
@@ -161,10 +161,10 @@ vercel --prod
        │
        ├─────────────► React UI (public read)
        │
-       └─────────────► Vercel API (X-Admin-Key for writes)
+└─────────────► Vercel API (X-Admin-Key for writes)
                                │
                                ▼
-                        Supabase Postgres
+                        Convex HTTP Actions
 ```
 
 ## Project Structure
@@ -184,7 +184,7 @@ prompt-library-app/
 │   ├── types/            # TypeScript types
 │   └── test/             # Test setup
 ├── supabase/
-│   └── schema.sql        # Database schema
+│   └── schema.sql        # Legacy schema (unused with Convex HTTP actions)
 └── vercel.json           # Vercel configuration
 ```
 
