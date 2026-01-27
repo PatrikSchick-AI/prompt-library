@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { usePrompts } from '../hooks/usePrompts';
 import type { PromptStatus } from '../types/prompt';
+import { Button, Badge } from '../components/ui';
+import { PromptCardSkeleton } from '../components/ui/Skeleton';
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -38,18 +40,9 @@ const Dashboard = () => {
     <div>
       <div className="flex justify-between items-center mb-8">
         <h2 className="text-3xl font-bold" style={{ color: 'var(--pl-text)' }}>Prompt Library</h2>
-        <button
-          onClick={() => navigate('/prompts/new')}
-          className="px-4 py-2 rounded transition-colors font-medium"
-          style={{ 
-            backgroundColor: 'var(--pl-accent)', 
-            color: 'white'
-          }}
-          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--pl-accent-hover)'}
-          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--pl-accent)'}
-        >
+        <Button onClick={() => navigate('/prompts/new')}>
           Create Prompt
-        </button>
+        </Button>
       </div>
 
       {/* Search and Filters */}
@@ -123,8 +116,10 @@ const Dashboard = () => {
       )}
 
       {loading ? (
-        <div className="text-center py-12">
-          <p style={{ color: 'var(--pl-text-muted)' }}>Loading prompts...</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[...Array(6)].map((_, i) => (
+            <PromptCardSkeleton key={i} />
+          ))}
         </div>
       ) : prompts.length === 0 ? (
         <div 
@@ -160,13 +155,9 @@ const Dashboard = () => {
                 <h3 className="text-lg font-semibold flex-1" style={{ color: 'var(--pl-text)' }}>
                   {prompt.name}
                 </h3>
-                <span
-                  className={`px-2 py-1 rounded text-xs font-medium ${getStatusColor(
-                    prompt.status
-                  )}`}
-                >
-                  {prompt.status}
-                </span>
+                <Badge variant={prompt.status}>
+                  {prompt.status.replace('_', ' ')}
+                </Badge>
               </div>
 
               {prompt.description && (
@@ -183,12 +174,9 @@ const Dashboard = () => {
               {prompt.tags && prompt.tags.length > 0 && (
                 <div className="flex flex-wrap gap-2 mb-3">
                   {prompt.tags.slice(0, 3).map((tag) => (
-                    <span
-                      key={tag}
-                      className="px-2 py-1 text-xs rounded bg-zinc-800 text-zinc-400"
-                    >
+                    <Badge key={tag} variant="default">
                       {tag}
-                    </span>
+                    </Badge>
                   ))}
                   {prompt.tags.length > 3 && (
                     <span className="px-2 py-1 text-xs" style={{ color: 'var(--pl-text-muted)' }}>

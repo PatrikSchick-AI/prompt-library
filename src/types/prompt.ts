@@ -19,39 +19,41 @@ export type VersionBumpType = 'major' | 'minor' | 'patch';
 
 export interface Prompt {
   id: string;
+  _id: string; // Convex ID
   name: string;
-  description: string | null;
+  description?: string;
   purpose: string;
   tags: string[];
   status: PromptStatus;
-  owner: string | null;
-  current_version_id: string | null;
+  owner?: string;
+  current_version_id?: string;
   created_at: string;
   updated_at: string;
 }
 
 export interface PromptVersion {
   id: string;
+  _id?: string; // Convex ID
   prompt_id: string;
   version_number: string;
   change_description: string;
   content: string;
-  system_prompt: string | null;
+  system_prompt?: string;
   models: string[];
   model_config: Record<string, unknown>;
-  author: string | null;
+  author?: string;
   created_at: string;
-  previous_version_id: string | null;
+  previous_version_id?: string;
 }
 
 export interface PromptEvent {
   id: string;
   prompt_id: string;
   event_type: EventType;
-  comment: string | null;
+  comment?: string;
   metadata: Record<string, unknown>;
   created_at: string;
-  created_by: string | null;
+  created_by?: string;
 }
 
 export interface PromptWithVersion extends Prompt {
@@ -62,11 +64,11 @@ export interface PromptWithVersion extends Prompt {
 export interface PromptListItem {
   id: string;
   name: string;
-  description: string | null;
+  description?: string;
   purpose: string;
   tags: string[];
   status: PromptStatus;
-  owner: string | null;
+  owner?: string;
   created_at: string;
   updated_at: string;
   current_version?: {

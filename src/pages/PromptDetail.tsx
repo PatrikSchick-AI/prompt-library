@@ -1,19 +1,53 @@
 import { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { usePrompt } from '../hooks/usePrompt';
 import type { PromptStatus } from '../types/prompt';
+import { Button, Badge, ConfirmDialog } from '../components/ui';
+import { PromptDetailSkeleton } from '../components/ui/Skeleton';
+import { EditPromptModal, NewVersionModal, StatusChangeModal } from '../components/modals';
+import { VersionHistoryTab, ActivityLogTab } from '../components/tabs';
+import { useMutation } from 'convex/react';
+import { api } from '../convex/_generated/api';
+import { useToast } from '../components/ui/Toast';
 
 const PromptDetail = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const { prompt, loading, error } = usePrompt(id);
+  const { addToast } = useToast();
+
   const [activeTab, setActiveTab] = useState<'content' | 'versions' | 'activity'>('content');
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isNewVersionModalOpen, setIsNewVersionModalOpen] = useState(false);
+  const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+
+  const deletePrompt = useMutation(api.prompts.deletePrompt);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    if (!prompt) return;
+
+    setIsDeleting(true);
+    try {
+      await deletePrompt({ id: prompt._id });
+      addToast('success', 'Prompt deleted successfully');
+      navigate('/');
+    } catch (error) {
+      console.error('Error deleting prompt:', error);
+      addToast('error', 'Failed to delete prompt. Please try again.');
+      setIsDeleting(false);
+    }
+  };
+
+  const handleCompareVersions = (v1: string, v2: string) => {
+    if (prompt) {
+      navigate(`/prompts/${prompt._id}/compare/${v1}/${v2}`);
+    }
+  };
 
   if (loading) {
-    return (
-      <div className="text-center py-12">
-        <p style={{ color: 'var(--pl-text-muted)' }}>Loading prompt...</p>
-      </div>
-    );
+    return <PromptDetailSkeleton />;
   }
 
   if (error) {
@@ -87,35 +121,30 @@ const PromptDetail = () => {
             </div>
           </div>
           <div className="flex gap-2">
-            <button
-              onClick={() => {
-                /* TODO: Implement edit */
-              }}
-              className="px-4 py-2 rounded transition-colors"
-              style={{ 
-                backgroundColor: 'var(--pl-surface)', 
-                border: '1px solid var(--pl-border)',
-                color: 'var(--pl-text)'
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.borderColor = 'var(--pl-border-hover)'}
-              onMouseLeave={(e) => e.currentTarget.style.borderColor = 'var(--pl-border)'}
+            <Button
+              variant="secondary"
+              onClick={() => setIsStatusModalOpen(true)}
+            >
+              Change Status
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={() => setIsEditModalOpen(true)}
             >
               Edit
-            </button>
-            <button
-              onClick={() => {
-                /* TODO: Implement new version */
-              }}
-              className="px-4 py-2 rounded transition-colors"
-              style={{ 
-                backgroundColor: 'var(--pl-accent)', 
-                color: 'white'
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--pl-accent-hover)'}
-              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--pl-accent)'}
+            </Button>
+            <Button
+              variant="primary"
+              onClick={() => setIsNewVersionModalOpen(true)}
             >
               New Version
-            </button>
+            </Button>
+            <Button
+              variant="danger"
+              onClick={() => setIsDeleteDialogOpen(true)}
+            >
+              Delete
+            </Button>
           </div>
         </div>
 
@@ -249,37 +278,62 @@ const PromptDetail = () => {
       )}
 
       {activeTab === 'versions' && (
-        <div 
-          className="rounded"
-          style={{ 
-            backgroundColor: 'var(--pl-surface)', 
-            border: '1px solid var(--pl-border)' 
-          }}
-        >
-          <div className="p-6">
-            <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--pl-text)' }}>
-              Version History
-            </h3>
-            <p style={{ color: 'var(--pl-text-muted)' }}>Version history coming soon...</p>
-          </div>
-        </div>
+        <VersionHistoryTab
+          promptId={prompt._id}
+          currentVersionId={prompt.current_version_id}
+          onCompareClick={handleCompareVersions}
+        />
       )}
 
       {activeTab === 'activity' && (
-        <div 
-          className="rounded"
-          style={{ 
-            backgroundColor: 'var(--pl-surface)', 
-            border: '1px solid var(--pl-border)' 
-          }}
-        >
-          <div className="p-6">
-            <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--pl-text)' }}>
-              Activity Log
-            </h3>
-            <p style={{ color: 'var(--pl-text-muted)' }}>Activity log coming soon...</p>
-          </div>
-        </div>
+        <ActivityLogTab promptId={prompt._id} />
+      )}
+
+      {/* Modals */}
+      {prompt && (
+        <>
+          <EditPromptModal
+            isOpen={isEditModalOpen}
+            onClose={() => setIsEditModalOpen(false)}
+            prompt={{
+              _id: prompt._id,
+              name: prompt.name,
+              description: prompt.description,
+              purpose: prompt.purpose,
+              tags: prompt.tags,
+            }}
+          />
+
+          {prompt.current_version && (
+            <NewVersionModal
+              isOpen={isNewVersionModalOpen}
+              onClose={() => setIsNewVersionModalOpen(false)}
+              promptId={prompt._id}
+              currentVersion={prompt.current_version.version_number}
+              currentContent={prompt.current_version.content}
+              currentSystemPrompt={prompt.current_version.system_prompt}
+              currentModels={prompt.current_version.models}
+            />
+          )}
+
+          <StatusChangeModal
+            isOpen={isStatusModalOpen}
+            onClose={() => setIsStatusModalOpen(false)}
+            promptId={prompt._id}
+            currentStatus={prompt.status}
+          />
+
+          <ConfirmDialog
+            isOpen={isDeleteDialogOpen}
+            onClose={() => setIsDeleteDialogOpen(false)}
+            onConfirm={handleDelete}
+            title="Delete Prompt"
+            message="Are you sure you want to delete this prompt? This action cannot be undone."
+            confirmText="Delete"
+            variant="danger"
+            isLoading={isDeleting}
+          />
+        </>
       )}
     </div>
   );
