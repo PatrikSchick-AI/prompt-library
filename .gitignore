@@ -34,7 +34,7 @@ dist-ssr
 .env.production.local
 
 # Convex generated files
-convex/_generated
+# convex/_generated - Temporarily committing stub files for Vercel builds
 
 # Build artifacts
 dist/
