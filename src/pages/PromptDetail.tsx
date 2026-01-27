@@ -7,7 +7,7 @@ import { PromptDetailSkeleton } from '../components/ui/Skeleton';
 import { EditPromptModal, NewVersionModal, StatusChangeModal } from '../components/modals';
 import { VersionHistoryTab, ActivityLogTab } from '../components/tabs';
 import { useMutation } from 'convex/react';
-import { api } from '../convex/_generated/api';
+import { api } from '../../convex/_generated/api';
 import { useToast } from '../components/ui/Toast';
 
 const PromptDetail = () => {
